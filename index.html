@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
@@ -11,7 +10,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 </head>
-
 <body>
 
   <!-- ══ ORIENTATION BLOCKER ══ -->
@@ -83,11 +81,12 @@
 
       <div class="menu-stats" id="menu-stats"></div>
       <div class="menu-keys">
-        <span><b>1-5</b> Arma</span><span><b>A/D</b> Mira</span>
-        <span><b>ESPACIO</b> Disparar</span><span><b>P</b> Pausa</span>
+        <span><b>1-5</b> Arma</span>
+        <span><b>A/D</b> Mira</span>
+        <span><b>ESPACIO</b> Disparar</span>
+        <span><b>P</b> Pausa</span>
       </div>
-      <p class="menu-biblio">Caballero Vargas, P.E. (2026). Sistemas Operativos I — Ing. en Sistemas, La Paz · Bolivia
-      </p>
+      <p class="menu-biblio">Caballero Vargas, P.E. (2026). Sistemas Operativos I — Ing. en Sistemas, La Paz · Bolivia</p>
     </div>
   </div>
 
@@ -96,21 +95,9 @@
     <!-- HUD Top -->
     <div id="hud-top">
       <div id="hud-left">
-        <div class="res-row"><span class="rl cpu">CPU</span>
-          <div class="bt">
-            <div class="bf cpu-f" id="bar-cpu"></div>
-          </div><span class="rv" id="val-cpu">100%</span>
-        </div>
-        <div class="res-row"><span class="rl ram">RAM</span>
-          <div class="bt">
-            <div class="bf ram-f" id="bar-ram"></div>
-          </div><span class="rv" id="val-ram">100%</span>
-        </div>
-        <div class="res-row"><span class="rl io">I/O</span>
-          <div class="bt">
-            <div class="bf io-f" id="bar-io"></div>
-          </div><span class="rv" id="val-io">100%</span>
-        </div>
+        <div class="res-row"><span class="rl cpu">CPU</span><div class="bt"><div class="bf cpu-f" id="bar-cpu"></div></div><span class="rv" id="val-cpu">100%</span></div>
+        <div class="res-row"><span class="rl ram">RAM</span><div class="bt"><div class="bf ram-f" id="bar-ram"></div></div><span class="rv" id="val-ram">100%</span></div>
+        <div class="res-row"><span class="rl io">I/O</span><div class="bt"><div class="bf io-f" id="bar-io"></div></div><span class="rv" id="val-io">100%</span></div>
       </div>
       <div id="hud-center">
         <div id="hud-score">SCORE <span id="score-val">0</span></div>
@@ -118,11 +105,7 @@
         <div id="hud-mode">MANUAL</div>
       </div>
       <div id="hud-right">
-        <div class="res-row"><span class="rl sh">ESCUDO</span>
-          <div class="bt wide">
-            <div class="bf sh-f" id="bar-shield"></div>
-          </div><span class="rv" id="val-shield">100%</span>
-        </div>
+        <div class="res-row"><span class="rl sh">ESCUDO</span><div class="bt wide"><div class="bf sh-f" id="bar-shield"></div></div><span class="rv" id="val-shield">100%</span></div>
         <div class="hud-mini"><span class="rl">VIDAS</span><span id="lives-icons">❤❤❤</span></div>
         <div class="hud-mini"><span class="rl">TIEMPO</span><span id="timer-val" class="tc">00:00</span></div>
       </div>
@@ -136,21 +119,11 @@
     <!-- HUD Bottom: armas -->
     <div id="hud-bottom">
       <div id="weapon-bar">
-        <div class="wslot active" data-w="0" id="ws0"><span class="wk">1</span><span class="wi">FIFO</span>
-          <div class="wcd" id="wcd0"></div>
-        </div>
-        <div class="wslot" data-w="1" id="ws1"><span class="wk">2</span><span class="wi">RR</span>
-          <div class="wcd" id="wcd1"></div>
-        </div>
-        <div class="wslot" data-w="2" id="ws2"><span class="wk">3</span><span class="wi">PRIORITY</span>
-          <div class="wcd" id="wcd2"></div>
-        </div>
-        <div class="wslot" data-w="3" id="ws3"><span class="wk">4</span><span class="wi">SJF</span>
-          <div class="wcd" id="wcd3"></div>
-        </div>
-        <div class="wslot" data-w="4" id="ws4"><span class="wk">5</span><span class="wi">MLFQ</span>
-          <div class="wcd" id="wcd4"></div>
-        </div>
+        <div class="wslot active" data-w="0" id="ws0"><span class="wk">1</span><span class="wi">FIFO</span><div class="wcd" id="wcd0"></div></div>
+        <div class="wslot" data-w="1" id="ws1"><span class="wk">2</span><span class="wi">RR</span><div class="wcd" id="wcd1"></div></div>
+        <div class="wslot" data-w="2" id="ws2"><span class="wk">3</span><span class="wi">PRIORITY</span><div class="wcd" id="wcd2"></div></div>
+        <div class="wslot" data-w="3" id="ws3"><span class="wk">4</span><span class="wi">SJF</span><div class="wcd" id="wcd3"></div></div>
+        <div class="wslot" data-w="4" id="ws4"><span class="wk">5</span><span class="wi">MLFQ</span><div class="wcd" id="wcd4"></div></div>
       </div>
       <div id="ai-log" class="hidden"><span id="ai-log-txt">Planificador inactivo</span></div>
       <div id="mob-ctrl">
@@ -165,24 +138,14 @@
   <!-- ══ MODAL TEORÍA ══ -->
   <div id="modal-theory" class="modal hidden">
     <div class="mbox">
-      <div class="mhdr"><span id="mt-icon">🔵</span>
-        <h2 id="mt-name">FIFO</h2>
-      </div>
+      <div class="mhdr"><span id="mt-icon">🔵</span><h2 id="mt-name">FIFO</h2></div>
       <div class="mbody">
-        <h3>📚 Fundamento Teórico</h3>
-        <p id="mt-theory"></p>
+        <h3>📚 Fundamento Teórico</h3><p id="mt-theory"></p>
         <div class="two-col">
-          <div>
-            <h3>✅ Ventajas</h3>
-            <ul id="mt-pros"></ul>
-          </div>
-          <div>
-            <h3>❌ Desventajas</h3>
-            <ul id="mt-cons"></ul>
-          </div>
+          <div><h3>✅ Ventajas</h3><ul id="mt-pros"></ul></div>
+          <div><h3>❌ Desventajas</h3><ul id="mt-cons"></ul></div>
         </div>
-        <h3>🎮 Analogía en Kernel Defender</h3>
-        <p id="mt-analogy"></p>
+        <h3>🎮 Analogía en Kernel Defender</h3><p id="mt-analogy"></p>
         <p class="mbiblio">Caballero Vargas, P.E. (2026). Sistemas Operativos I.</p>
       </div>
       <button class="btn-neon cyan full" id="mt-ok">▶ CONTINUAR SIMULACIÓN</button>
@@ -192,12 +155,8 @@
   <!-- ══ MODAL EXAMEN ══ -->
   <div id="modal-exam" class="modal hidden">
     <div class="mbox exam-mbox">
-      <div class="mhdr exam-hdr"><span>📋</span>
-        <h2>EVALUACIÓN — SO1</h2>
-      </div>
-      <div class="exam-tbar">
-        <div id="exam-tfill"></div>
-      </div>
+      <div class="mhdr exam-hdr"><span>📋</span><h2>EVALUACIÓN — SO1</h2></div>
+      <div class="exam-tbar"><div id="exam-tfill"></div></div>
       <p id="exam-q" class="exam-q"></p>
       <div id="exam-opts"></div>
       <p id="exam-fb" class="exam-fb hidden"></p>
@@ -232,7 +191,6 @@
   <!-- ══ DASHBOARD DOCENTE ══ -->
   <div id="screen-dashboard" class="screen">
     <div class="dashboard-container">
-      <!-- Cabecera -->
       <div class="dash-header">
         <h1>📊 DASHBOARD DOCENTE</h1>
         <p class="dash-subtitle">Seguimiento de Estudiantes - Kernel Defender</p>
@@ -242,7 +200,6 @@
         </div>
       </div>
 
-      <!-- Resumen General -->
       <div class="dash-summary-grid">
         <div class="dash-summary-card">
           <div class="dash-summary-icon">👥</div>
@@ -266,97 +223,65 @@
         </div>
       </div>
 
-      <!-- Actividad Reciente -->
       <div class="dash-section">
         <h3>📋 Actividad Reciente de Estudiantes</h3>
         <div class="dash-table-wrap">
           <table class="dash-table" id="dash-activity-table">
             <thead>
-              <tr>
-                <th>Estudiante</th>
-                <th>Email</th>
-                <th>Partidas</th>
-                <th>Récord</th>
-                <th>Oleada</th>
-                <th>Tiempo</th>
-                <th>Última Actividad</th>
-              </tr>
+              <tr><th>Estudiante</th><th>Email</th><th>Partidas</th><th>Récord</th><th>Oleada</th><th>Tiempo</th><th>Última Actividad</th></tr>
             </thead>
             <tbody id="dash-activity-body">
-              <tr>
-                <td colspan="7" class="dash-loading">Cargando datos...</td>
-              </tr>
+              <tr><td colspan="7" class="dash-loading">Cargando datos...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Gráfico de Algoritmos -->
       <div class="dash-section">
         <h3>⚙️ Uso de Algoritmos de Planificación</h3>
         <div class="dash-algo-grid" id="dash-algo-grid">
           <div class="dash-algo-item">
             <span class="dash-algo-name">FIFO</span>
-            <div class="dash-algo-track">
-              <div class="dash-algo-fill fifo" id="algo-fifo" style="width:0%"></div>
-            </div>
+            <div class="dash-algo-track"><div class="dash-algo-fill fifo" id="algo-fifo" style="width:0%"></div></div>
             <span class="dash-algo-pct" id="algo-fifo-pct">0%</span>
           </div>
           <div class="dash-algo-item">
             <span class="dash-algo-name">RR</span>
-            <div class="dash-algo-track">
-              <div class="dash-algo-fill rr" id="algo-rr" style="width:0%"></div>
-            </div>
+            <div class="dash-algo-track"><div class="dash-algo-fill rr" id="algo-rr" style="width:0%"></div></div>
             <span class="dash-algo-pct" id="algo-rr-pct">0%</span>
           </div>
           <div class="dash-algo-item">
             <span class="dash-algo-name">PRIORITY</span>
-            <div class="dash-algo-track">
-              <div class="dash-algo-fill priority" id="algo-priority" style="width:0%"></div>
-            </div>
+            <div class="dash-algo-track"><div class="dash-algo-fill priority" id="algo-priority" style="width:0%"></div></div>
             <span class="dash-algo-pct" id="algo-priority-pct">0%</span>
           </div>
           <div class="dash-algo-item">
             <span class="dash-algo-name">SJF</span>
-            <div class="dash-algo-track">
-              <div class="dash-algo-fill sjf" id="algo-sjf" style="width:0%"></div>
-            </div>
+            <div class="dash-algo-track"><div class="dash-algo-fill sjf" id="algo-sjf" style="width:0%"></div></div>
             <span class="dash-algo-pct" id="algo-sjf-pct">0%</span>
           </div>
           <div class="dash-algo-item">
             <span class="dash-algo-name">MLFQ</span>
-            <div class="dash-algo-track">
-              <div class="dash-algo-fill mlfq" id="algo-mlfq" style="width:0%"></div>
-            </div>
+            <div class="dash-algo-track"><div class="dash-algo-fill mlfq" id="algo-mlfq" style="width:0%"></div></div>
             <span class="dash-algo-pct" id="algo-mlfq-pct">0%</span>
           </div>
         </div>
       </div>
 
-      <!-- Rendimiento en Exámenes -->
       <div class="dash-section">
         <h3>📝 Rendimiento en Modo Examen</h3>
         <div class="dash-table-wrap">
           <table class="dash-table" id="dash-exam-table">
             <thead>
-              <tr>
-                <th>Estudiante</th>
-                <th>Email</th>
-                <th>Total Respuestas</th>
-                <th>Correctas</th>
-                <th>Exactitud</th>
-              </tr>
+              <tr><th>Estudiante</th><th>Email</th><th>Total Respuestas</th><th>Correctas</th><th>Exactitud</th></tr>
             </thead>
             <tbody id="dash-exam-body">
-              <tr>
-                <td colspan="5" class="dash-loading">Cargando datos...</td>
-              </tr>
+              <tr><td colspan="5" class="dash-loading">Cargando datos...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Actividad por Hora -->
       <div class="dash-section">
         <h3>⏰ Actividad por Hora del Día</h3>
         <div class="dash-hourly">
@@ -373,23 +298,15 @@
         </div>
       </div>
 
-      <!-- Estudiantes con bajo rendimiento -->
       <div class="dash-section warning">
         <h3>🚨 Estudiantes con Bajo Rendimiento</h3>
         <div class="dash-table-wrap">
           <table class="dash-table" id="dash-low-table">
             <thead>
-              <tr>
-                <th>Estudiante</th>
-                <th>Email</th>
-                <th>Última Actividad</th>
-                <th>Total Partidas</th>
-              </tr>
+              <tr><th>Estudiante</th><th>Email</th><th>Última Actividad</th><th>Total Partidas</th></tr>
             </thead>
             <tbody id="dash-low-body">
-              <tr>
-                <td colspan="4" class="dash-loading">Cargando datos...</td>
-              </tr>
+              <tr><td colspan="4" class="dash-loading">Cargando datos...</td></tr>
             </tbody>
           </table>
         </div>
@@ -399,5 +316,4 @@
 
   <script src="game.js"></script>
 </body>
-
 </html>
