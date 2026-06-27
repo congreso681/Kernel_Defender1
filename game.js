@@ -234,20 +234,23 @@ function renderDash() {
 // ══════════════════════════════════════════════════════════════════════
 
 // Inicializar Firebase (solo si firebase está disponible)
-
-let provider = null;
-try {
-  if (typeof firebase !== 'undefined') {
-    firebase.initializeApp(firebaseConfig);
-    auth = firebase.auth();
-    provider = new firebase.auth.GoogleAuthProvider();
-    console.log('🔥 Firebase inicializado');
-  } else {
-    console.warn('⚠️ Firebase SDK no cargado');
+// Verificar que Firebase está inicializado
+function ensureFirebase() {
+  if (!auth) {
+    try {
+      if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        provider = new firebase.auth.GoogleAuthProvider();
+        console.log('🔥 Firebase inicializado');
+      }
+    } catch (e) {
+      console.warn('⚠️ Error inicializando Firebase:', e.message);
+    }
   }
-} catch (e) {
-  console.warn('⚠️ Error inicializando Firebase:', e.message);
 }
+// Llamar para asegurar que está inicializado
+ensureFirebase();
 
 async function loginWithGoogle() {
   if (!auth) {
