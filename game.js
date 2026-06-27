@@ -253,35 +253,36 @@ function ensureFirebase() {
 ensureFirebase();
 
 async function loginWithGoogle() {
-  if (!auth) {
-    alert('❌ Firebase no está disponible. Verifica la conexión a internet.');
-    return { success: false, message: 'Firebase no disponible' };
-  }
-  try {
-    const result = await auth.signInWithPopup(provider);
-    const user = result.user;
-    const token = await user.getIdToken();
-
-    const response = await fetch(`${BACKEND_URL}/api/auth/google`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ firebaseToken: token })
-    });
-
-    const data = await response.json();
-    if (data.success) {
-      console.log('✅ Login con Google:', data.user);
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('username', data.user.username);
-      updateAuthUI(true, data.user);
-      return { success: true, user: data.user };
+    if (!auth) {
+        alert('❌ Firebase no está disponible. Verifica la conexión a internet.');
+        return { success: false, message: 'Firebase no disponible' };
     }
-    return { success: false, message: data.message };
-  } catch (error) {
-    console.error('❌ Error en login con Google:', error);
-    return { success: false, message: error.message };
-  }
+    try {
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+        const token = await user.getIdToken();
+
+        const response = await fetch(`${BACKEND_URL}/api/auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ firebaseToken: token })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            console.log('✅ Login con Google:', data.user);
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('username', data.user.username);
+            updateAuthUI(true, data.user);
+            renderDash();
+            return { success: true, user: data.user };
+        }
+        return { success: false, message: data.message };
+    } catch (error) {
+        console.error('❌ Error en login con Google:', error);
+        return { success: false, message: error.message };
+    }
 }
 
 async function logoutUser() {
@@ -304,29 +305,42 @@ function getCurrentUser() {
 }
 
 function updateAuthUI(isLoggedIn, user = null) {
-  const googleBtn = document.getElementById('btn-google-login');
-  const logoutBtn = document.getElementById('btn-logout');
-  const userInfo = document.getElementById('user-info');
-  const dashBtn = document.getElementById('btn-dashboard');
+    console.log('🔄 Actualizando UI de autenticación:', { isLoggedIn, user });
+    
+    const googleBtn = document.getElementById('btn-google-login');
+    const logoutBtn = document.getElementById('btn-logout');
+    const userInfo = document.getElementById('user-info');
+    const dashBtnWrap = document.getElementById('dash-button-wrap');
+    const dashBtn = document.getElementById('btn-dashboard');
 
-  if (isLoggedIn && user) {
-    if (googleBtn) googleBtn.style.display = 'none';
-    if (logoutBtn) {
-      logoutBtn.style.display = 'inline-block';
-      logoutBtn.textContent = `👤 ${user.username || user.email} | Cerrar`;
+    if (isLoggedIn && user) {
+        // Mostrar usuario
+        if (googleBtn) googleBtn.style.display = 'none';
+        if (logoutBtn) {
+            logoutBtn.style.display = 'inline-block';
+            logoutBtn.textContent = `👤 ${user.username || user.email} | Cerrar`;
+        }
+        if (userInfo) userInfo.textContent = `✅ Conectado como: ${user.username || user.email}`;
+
+        // ✅ Mostrar botón dashboard si es profesor
+        const teacherEmails = ['profesor@email.com', 'docente@univ.bo', 'patricia@univ.bo'];
+        const isTeacher = teacherEmails.includes(user.email);
+        console.log('👨‍🏫 ¿Es profesor?', isTeacher, user.email);
+        
+        if (dashBtnWrap) {
+            dashBtnWrap.style.display = isTeacher ? 'block' : 'none';
+            console.log('📊 Botón Dashboard:', isTeacher ? 'visible' : 'oculto');
+        }
+        if (dashBtn) {
+            dashBtn.style.display = isTeacher ? 'inline-block' : 'none';
+        }
+    } else {
+        if (googleBtn) googleBtn.style.display = 'inline-block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (userInfo) userInfo.textContent = '';
+        if (dashBtnWrap) dashBtnWrap.style.display = 'none';
+        if (dashBtn) dashBtn.style.display = 'none';
     }
-    if (userInfo) userInfo.textContent = `✅ Conectado como: ${user.username || user.email}`;
-    // Mostrar botón dashboard solo si es profesor
-    if (dashBtn) {
-      const teacherEmails = ['profesor@email.com', 'docente@univ.bo', 'patricia@univ.bo'];
-      dashBtn.style.display = teacherEmails.includes(user.email) ? 'inline-block' : 'none';
-    }
-  } else {
-    if (googleBtn) googleBtn.style.display = 'inline-block';
-    if (logoutBtn) logoutBtn.style.display = 'none';
-    if (userInfo) userInfo.textContent = '';
-    if (dashBtn) dashBtn.style.display = 'none';
-  }
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1538,33 +1552,44 @@ document.addEventListener('DOMContentLoaded', () => {
 //  §24  INICIALIZAR UI DE AUTENTICACIÓN
 // ══════════════════════════════════════════════════════════════════════
 function initAuthUI() {
-  const googleBtn = document.getElementById('btn-google-login');
-  const logoutBtn = document.getElementById('btn-logout');
+    const googleBtn = document.getElementById('btn-google-login');
+    const logoutBtn = document.getElementById('btn-logout');
 
-  if (isAuthenticated()) {
+    console.log('🔄 Inicializando UI de autenticación...');
+
+    // Verificar si hay usuario en localStorage
     const user = getCurrentUser();
-    if (user) updateAuthUI(true, user);
-  } else {
-    updateAuthUI(false);
-  }
+    const token = localStorage.getItem('authToken');
+    
+    if (user && token) {
+        console.log('✅ Usuario autenticado encontrado:', user);
+        updateAuthUI(true, user);
+    } else {
+        console.log('⚠️ No hay usuario autenticado');
+        updateAuthUI(false);
+    }
 
-  if (googleBtn) {
-    googleBtn.addEventListener('click', async () => {
-      const result = await loginWithGoogle();
-      if (result.success) {
-        renderDash();
-      } else {
-        alert('❌ Error: ' + result.message);
-      }
-    });
-  }
+    if (googleBtn) {
+        googleBtn.addEventListener('click', async () => {
+            const result = await loginWithGoogle();
+            if (result.success) {
+                renderDash();
+                // ✅ Actualizar UI después del login
+                updateAuthUI(true, result.user);
+            } else {
+                alert('❌ Error: ' + result.message);
+            }
+        });
+    }
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      logoutUser();
-      renderDash();
-    });
-  }
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            logoutUser();
+            renderDash();
+            // ✅ Actualizar UI después del logout
+            updateAuthUI(false);
+        });
+    }
 }
 
 // ══════════════════════════════════════════════════════════════════════
