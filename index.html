@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Kernel Defender — SO1</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+</head>
+
+<body>
+
+  <!-- ══ ORIENTATION BLOCKER ══ -->
+  <div id="orientation-blocker">
+    <div class="rotate-ring">⟳</div>
+    <p>Gira tu dispositivo</p>
+    <small>Kernel Defender requiere modo horizontal</small>
+  </div>
+
+  <!-- ══ BOOT SEQUENCE ══ -->
+  <div id="screen-boot" class="screen active">
+    <div class="boot-wrap">
+      <div class="boot-logo">
+        <canvas id="bootCanvas" width="320" height="320"></canvas>
+      </div>
+      <div class="boot-lines" id="boot-lines"></div>
+      <div class="boot-bar-wrap">
+        <div class="boot-bar" id="boot-bar"></div>
+      </div>
+      <div class="boot-ready hidden" id="boot-ready">
+        <span>SISTEMA LISTO</span>
+        <button class="btn-boot" id="btn-boot-enter">▶ INICIAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MENÚ PRINCIPAL ══ -->
+  <div id="screen-menu" class="screen">
+    <canvas id="menuBg" width="800" height="600"></canvas>
+    <div class="menu-overlay">
+      <div class="menu-title">
+        <span class="title-kern">KERNEL</span>
+        <span class="title-def">DEFENDER</span>
+      </div>
+      <p class="menu-sub">Sistema de Defensa Orbital · Procesos Corruptos Detectados</p>
+
+      <div class="menu-cards">
+        <div class="mode-card" id="card-manual">
+          <div class="card-icon">⚡</div>
+          <div class="card-name">MANUAL</div>
+          <div class="card-desc">Control directo del planificador</div>
+        </div>
+        <div class="mode-card featured" id="card-auto">
+          <div class="card-icon">🤖</div>
+          <div class="card-name">AUTÓNOMO</div>
+          <div class="card-desc">IA selecciona algoritmos en tiempo real</div>
+          <div class="card-badge">IA</div>
+        </div>
+        <div class="mode-card" id="card-exam">
+          <div class="card-icon">📋</div>
+          <div class="card-name">EXAMEN</div>
+          <div class="card-desc">Evaluación de SO1 integrada</div>
+        </div>
+      </div>
+
+      <!-- Autenticación -->
+      <div class="auth-section" id="auth-section">
+        <div id="auth-buttons">
+          <button class="btn-neon cyan" id="btn-google-login">🔑 Iniciar con Google</button>
+          <button class="btn-neon blue" id="btn-logout" style="display:none;">🚪 Cerrar Sesión</button>
+        </div>
+        <div id="user-info" style="font-size:0.7rem; color:rgba(216,238,255,0.5); margin-top:5px;"></div>
+      </div>
+
+      <!-- Botón Dashboard (solo para profesores) -->
+      <div class="dash-button-wrap" id="dash-button-wrap" style="display:none;">
+        <button class="btn-neon purple" id="btn-dashboard">📊 Dashboard Docente</button>
+      </div>
+
+      <div class="menu-stats" id="menu-stats"></div>
+      <div class="menu-keys">
+        <span><b>1-5</b> Arma</span><span><b>A/D</b> Mira</span>
+        <span><b>ESPACIO</b> Disparar</span><span><b>P</b> Pausa</span>
+      </div>
+      <p class="menu-biblio">Caballero Vargas, P.E. (2026). Sistemas Operativos I — Ing. en Sistemas, La Paz · Bolivia
+      </p>
+    </div>
+  </div>
+
+  <!-- ══ PANTALLA DE JUEGO ══ -->
+  <div id="screen-game" class="screen">
+    <!-- HUD Top -->
+    <div id="hud-top">
+      <div id="hud-left">
+        <div class="res-row"><span class="rl cpu">CPU</span>
+          <div class="bt">
+            <div class="bf cpu-f" id="bar-cpu"></div>
+          </div><span class="rv" id="val-cpu">100%</span>
+        </div>
+        <div class="res-row"><span class="rl ram">RAM</span>
+          <div class="bt">
+            <div class="bf ram-f" id="bar-ram"></div>
+          </div><span class="rv" id="val-ram">100%</span>
+        </div>
+        <div class="res-row"><span class="rl io">I/O</span>
+          <div class="bt">
+            <div class="bf io-f" id="bar-io"></div>
+          </div><span class="rv" id="val-io">100%</span>
+        </div>
+      </div>
+      <div id="hud-center">
+        <div id="hud-score">SCORE <span id="score-val">0</span></div>
+        <div id="hud-wave">OLEADA <span id="wave-val">1</span>/12</div>
+        <div id="hud-mode">MANUAL</div>
+      </div>
+      <div id="hud-right">
+        <div class="res-row"><span class="rl sh">ESCUDO</span>
+          <div class="bt wide">
+            <div class="bf sh-f" id="bar-shield"></div>
+          </div><span class="rv" id="val-shield">100%</span>
+        </div>
+        <div class="hud-mini"><span class="rl">VIDAS</span><span id="lives-icons">❤❤❤</span></div>
+        <div class="hud-mini"><span class="rl">TIEMPO</span><span id="timer-val" class="tc">00:00</span></div>
+      </div>
+    </div>
+
+    <!-- Canvas Principal -->
+    <div id="canvas-wrap">
+      <canvas id="gameCanvas" width="800" height="480"></canvas>
+    </div>
+
+    <!-- HUD Bottom: armas -->
+    <div id="hud-bottom">
+      <div id="weapon-bar">
+        <div class="wslot active" data-w="0" id="ws0"><span class="wk">1</span><span class="wi">FIFO</span>
+          <div class="wcd" id="wcd0"></div>
+        </div>
+        <div class="wslot" data-w="1" id="ws1"><span class="wk">2</span><span class="wi">RR</span>
+          <div class="wcd" id="wcd1"></div>
+        </div>
+        <div class="wslot" data-w="2" id="ws2"><span class="wk">3</span><span class="wi">PRIORITY</span>
+          <div class="wcd" id="wcd2"></div>
+        </div>
+        <div class="wslot" data-w="3" id="ws3"><span class="wk">4</span><span class="wi">SJF</span>
+          <div class="wcd" id="wcd3"></div>
+        </div>
+        <div class="wslot" data-w="4" id="ws4"><span class="wk">5</span><span class="wi">MLFQ</span>
+          <div class="wcd" id="wcd4"></div>
+        </div>
+      </div>
+      <div id="ai-log" class="hidden"><span id="ai-log-txt">Planificador inactivo</span></div>
+      <div id="mob-ctrl">
+        <button class="mbtn" id="mob-l">◀</button>
+        <button class="mbtn fire" id="mob-fire">FIRE</button>
+        <button class="mbtn" id="mob-r">▶</button>
+      </div>
+    </div>
+    <button id="btn-pause">⏸</button>
+  </div>
+
+  <!-- ══ MODAL TEORÍA ══ -->
+  <div id="modal-theory" class="modal hidden">
+    <div class="mbox">
+      <div class="mhdr"><span id="mt-icon">🔵</span>
+        <h2 id="mt-name">FIFO</h2>
+      </div>
+      <div class="mbody">
+        <h3>📚 Fundamento Teórico</h3>
+        <p id="mt-theory"></p>
+        <div class="two-col">
+          <div>
+            <h3>✅ Ventajas</h3>
+            <ul id="mt-pros"></ul>
+          </div>
+          <div>
+            <h3>❌ Desventajas</h3>
+            <ul id="mt-cons"></ul>
+          </div>
+        </div>
+        <h3>🎮 Analogía en Kernel Defender</h3>
+        <p id="mt-analogy"></p>
+        <p class="mbiblio">Caballero Vargas, P.E. (2026). Sistemas Operativos I.</p>
+      </div>
+      <button class="btn-neon cyan full" id="mt-ok">▶ CONTINUAR SIMULACIÓN</button>
+    </div>
+  </div>
+
+  <!-- ══ MODAL EXAMEN ══ -->
+  <div id="modal-exam" class="modal hidden">
+    <div class="mbox exam-mbox">
+      <div class="mhdr exam-hdr"><span>📋</span>
+        <h2>EVALUACIÓN — SO1</h2>
+      </div>
+      <div class="exam-tbar">
+        <div id="exam-tfill"></div>
+      </div>
+      <p id="exam-q" class="exam-q"></p>
+      <div id="exam-opts"></div>
+      <p id="exam-fb" class="exam-fb hidden"></p>
+      <p class="mbiblio">Caballero Vargas, P.E. (2026). Sistemas Operativos I.</p>
+    </div>
+  </div>
+
+  <!-- ══ MODAL PAUSA ══ -->
+  <div id="modal-pause" class="modal hidden">
+    <div class="mbox sbox">
+      <h2>⏸ PAUSADO</h2>
+      <p>El planificador ha suspendido todos los hilos activos.</p>
+      <button class="btn-neon cyan full" id="btn-resume">▶ REANUDAR</button>
+      <button class="btn-neon red full" id="btn-quit">🏠 MENÚ</button>
+    </div>
+  </div>
+
+  <!-- ══ GAME OVER ══ -->
+  <div id="screen-over" class="screen">
+    <canvas id="overCanvas" width="800" height="600"></canvas>
+    <div class="over-overlay">
+      <div class="over-title" id="over-title">💀 KERNEL PANIC</div>
+      <p class="over-reason" id="over-reason"></p>
+      <div class="over-stats" id="over-stats"></div>
+      <div class="over-btns">
+        <button class="btn-neon red" id="btn-retry">↺ REINTENTAR</button>
+        <button class="btn-neon blue" id="btn-to-menu">🏠 MENÚ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DASHBOARD DOCENTE ══ -->
+  <div id="screen-dashboard" class="screen">
+    <div class="dashboard-container">
+      <!-- Cabecera -->
+      <div class="dash-header">
+        <h1>📊 DASHBOARD DOCENTE</h1>
+        <p class="dash-subtitle">Seguimiento de Estudiantes - Kernel Defender</p>
+        <div class="dash-actions">
+          <button class="btn-neon cyan" id="dash-refresh">🔄 Actualizar</button>
+          <button class="btn-neon blue" id="dash-back">🔙 Volver al Menú</button>
+        </div>
+      </div>
+
+      <!-- Resumen General -->
+      <div class="dash-summary-grid">
+        <div class="dash-summary-card">
+          <div class="dash-summary-icon">👥</div>
+          <div class="dash-summary-value" id="dash-total-students">0</div>
+          <div class="dash-summary-label">Estudiantes Activos</div>
+        </div>
+        <div class="dash-summary-card">
+          <div class="dash-summary-icon">🎮</div>
+          <div class="dash-summary-value" id="dash-total-games">0</div>
+          <div class="dash-summary-label">Partidas Totales</div>
+        </div>
+        <div class="dash-summary-card">
+          <div class="dash-summary-icon">⏰</div>
+          <div class="dash-summary-value" id="dash-total-time">0h</div>
+          <div class="dash-summary-label">Tiempo Total Jugado</div>
+        </div>
+        <div class="dash-summary-card">
+          <div class="dash-summary-icon">⭐</div>
+          <div class="dash-summary-value" id="dash-avg-score">0</div>
+          <div class="dash-summary-label">Puntuación Promedio</div>
+        </div>
+      </div>
+
+      <!-- Actividad Reciente -->
+      <div class="dash-section">
+        <h3>📋 Actividad Reciente de Estudiantes</h3>
+        <div class="dash-table-wrap">
+          <table class="dash-table" id="dash-activity-table">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Email</th>
+                <th>Partidas</th>
+                <th>Récord</th>
+                <th>Oleada</th>
+                <th>Tiempo</th>
+                <th>Última Actividad</th>
+              </tr>
+            </thead>
+            <tbody id="dash-activity-body">
+              <tr>
+                <td colspan="7" class="dash-loading">Cargando datos...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Gráfico de Algoritmos -->
+      <div class="dash-section">
+        <h3>⚙️ Uso de Algoritmos de Planificación</h3>
+        <div class="dash-algo-grid" id="dash-algo-grid">
+          <div class="dash-algo-item">
+            <span class="dash-algo-name">FIFO</span>
+            <div class="dash-algo-track">
+              <div class="dash-algo-fill fifo" id="algo-fifo" style="width:0%"></div>
+            </div>
+            <span class="dash-algo-pct" id="algo-fifo-pct">0%</span>
+          </div>
+          <div class="dash-algo-item">
+            <span class="dash-algo-name">RR</span>
+            <div class="dash-algo-track">
+              <div class="dash-algo-fill rr" id="algo-rr" style="width:0%"></div>
+            </div>
+            <span class="dash-algo-pct" id="algo-rr-pct">0%</span>
+          </div>
+          <div class="dash-algo-item">
+            <span class="dash-algo-name">PRIORITY</span>
+            <div class="dash-algo-track">
+              <div class="dash-algo-fill priority" id="algo-priority" style="width:0%"></div>
+            </div>
+            <span class="dash-algo-pct" id="algo-priority-pct">0%</span>
+          </div>
+          <div class="dash-algo-item">
+            <span class="dash-algo-name">SJF</span>
+            <div class="dash-algo-track">
+              <div class="dash-algo-fill sjf" id="algo-sjf" style="width:0%"></div>
+            </div>
+            <span class="dash-algo-pct" id="algo-sjf-pct">0%</span>
+          </div>
+          <div class="dash-algo-item">
+            <span class="dash-algo-name">MLFQ</span>
+            <div class="dash-algo-track">
+              <div class="dash-algo-fill mlfq" id="algo-mlfq" style="width:0%"></div>
+            </div>
+            <span class="dash-algo-pct" id="algo-mlfq-pct">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rendimiento en Exámenes -->
+      <div class="dash-section">
+        <h3>📝 Rendimiento en Modo Examen</h3>
+        <div class="dash-table-wrap">
+          <table class="dash-table" id="dash-exam-table">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Email</th>
+                <th>Total Respuestas</th>
+                <th>Correctas</th>
+                <th>Exactitud</th>
+              </tr>
+            </thead>
+            <tbody id="dash-exam-body">
+              <tr>
+                <td colspan="5" class="dash-loading">Cargando datos...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Actividad por Hora -->
+      <div class="dash-section">
+        <h3>⏰ Actividad por Hora del Día</h3>
+        <div class="dash-hourly">
+          <div class="dash-hourly-bars" id="dash-hourly-bars">
+            <span class="dash-loading">Cargando...</span>
+          </div>
+          <div class="dash-hour-labels">
+            <span class="dash-hour-label">0h</span>
+            <span class="dash-hour-label">6h</span>
+            <span class="dash-hour-label">12h</span>
+            <span class="dash-hour-label">18h</span>
+            <span class="dash-hour-label">24h</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estudiantes con bajo rendimiento -->
+      <div class="dash-section warning">
+        <h3>🚨 Estudiantes con Bajo Rendimiento</h3>
+        <div class="dash-table-wrap">
+          <table class="dash-table" id="dash-low-table">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Email</th>
+                <th>Última Actividad</th>
+                <th>Total Partidas</th>
+              </tr>
+            </thead>
+            <tbody id="dash-low-body">
+              <tr>
+                <td colspan="4" class="dash-loading">Cargando datos...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+
+</html>
