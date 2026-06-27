@@ -13,58 +13,45 @@
 // ══════════════════════════════════════════════════════════════════════
 //  §1  CONSTANTES GLOBALES
 // ══════════════════════════════════════════════════════════════════════
-const CW = 800, CH = 480;           // dimensiones lógicas del canvas de juego
-const KERNEL_X = 400, KERNEL_Y = 510; // núcleo fijo en base inferior
-const SHIELD_R = 56;               // radio del escudo orbital
-const KERNEL_R = 24;               // radio del núcleo
+const CW = 800, CH = 480;
+const KERNEL_X = 400, KERNEL_Y = 510;
+const SHIELD_R = 56;
+const KERNEL_R = 24;
 
-/** Paleta neón del sistema */
 const C = {
   blue: '#00b4ff', cyan: '#00ffd2', green: '#2dff6e', orange: '#ff9500',
   purple: '#c040ff', red: '#ff2255', yellow: '#ffe600', white: '#d8eeff',
   gray: '#6a7f96', violet: '#8844ff', teal: '#00e5c0',
 };
 
-/** Armas = Algoritmos de Scheduling */
 const WEAPONS = [
-  {
-    id: 0, name: 'FIFO Blaster', short: 'FIFO', col: C.blue, dmg: 15, cd: 300, burst: 1, spread: 0,
-    theory: 'First In, First Out (FCFS) atiende procesos en estricto orden de llegada. No-apropiativo. La cola FIFO es la estructura de datos más simple para gestionar la ready queue.',
-    pros: ['Implementación trivial (cola simple)', 'Sin inanición — todo proceso ejecuta eventualmente', 'Determinístico y predecible'],
-    cons: ['Efecto convoy: procesos cortos esperan a largos', 'Tiempo de espera promedio alto', 'No considera prioridades ni burst time'],
-    analogy: 'FIFO Blaster dispara proyectiles lineales de uno en uno. Limpia filas de Zombies eficientemente pero puede saturarse con enemigos de alta vida (efecto convoy).'
-  },
-  {
-    id: 1, name: 'Quantum Burst', short: 'RR', col: C.cyan, dmg: 10, cd: 160, burst: 3, spread: 9,
-    theory: 'Round Robin asigna a cada proceso un quantum q fijo. Al agotarlo sin terminar, el proceso regresa al final de la cola circular (preemptive). Equilibra el tiempo de respuesta para todos los hilos.',
-    pros: ['Equitativo: ningún proceso monopoliza la CPU', 'Respuesta rápida para procesos interactivos', 'Preemptivo — previene el efecto convoy'],
-    cons: ['Overhead de context switch si q es muy pequeño', 'Throughput inferior a SJF', 'Tiempo de respuesta alto con cargas masivas'],
-    analogy: 'Quantum Burst lanza 3 proyectiles cíclicos con dispersión angular, distribuyendo daño equitativamente entre múltiples enemigos activos. Ideal para enjambres.'
-  },
-  {
-    id: 2, name: 'Priority Sniper', short: 'PRIORITY', col: C.orange, dmg: 28, cd: 580, burst: 1, spread: 0,
-    theory: 'Planificación por Prioridad despacha siempre el proceso listo de mayor prioridad. Apropiativo o no. El peligro principal es la inanición, mitigable con aging (incremento de prioridad con el tiempo de espera).',
-    pros: ['Despacha hilos críticos primero', 'Flexible: prioridades estáticas o dinámicas', 'Óptimo para sistemas de tiempo real'],
-    cons: ['Inanición (starvation) de procesos de baja prioridad', 'Inversión de prioridad sin manejo adecuado', 'Complejidad mayor que FIFO'],
-    analogy: 'Priority Sniper usa trigonometría radial para auto-apuntar al proceso enemigo de mayor amenaza (más cercano al núcleo). Alto daño, bajo cadencia.'
-  },
-  {
-    id: 3, name: 'Quick Terminator', short: 'SJF', col: C.green, dmg: 20, cd: 400, burst: 1, spread: 0,
-    theory: 'Shortest Job First selecciona el proceso con menor burst time estimado. SRT (apropiativo) minimiza el tiempo de espera promedio de forma óptima. Requiere estimación del burst mediante media exponencial.',
-    pros: ['Mínimo tiempo de espera promedio (óptimo demostrado)', 'Alto throughput', 'Ideal para lotes con burst times conocidos'],
-    cons: ['Requiere estimación precisa del burst time', 'Starvation de procesos largos', 'Inaplicable sin historial de ejecución'],
-    analogy: 'Quick Terminator inflige +20 daño crítico cuando el enemigo tiene < 30% HP restante — el "trabajo más corto". Óptimo contra Fork Bombs antes de su replicación.'
-  },
-  {
-    id: 4, name: 'Multishot Array', short: 'MLFQ', col: C.purple, dmg: 12, cd: 480, burst: 3, spread: 26,
-    theory: 'Multilevel Feedback Queue mantiene varias colas con distintos quantums. Procesos nuevos entran en la cola de mayor prioridad; si agotan su quantum, descienden a colas inferiores. Aging periódico eleva procesos que esperan demasiado.',
-    pros: ['Separa automáticamente procesos interactivos de batch', 'Adaptativo sin información a priori', 'Balance entre respuesta y throughput'],
-    cons: ['Implementación compleja — múltiples parámetros', 'Puede ser explotado con I/O voluntario antes del quantum', 'Overhead de bookkeeping por cola'],
-    analogy: 'Multishot Array lanza 3 proyectiles en abanico a ±26°, cubriendo múltiples sectores orbitales simultáneamente. Ideal para Race Conditions y Bosses con escudos distribuidos.'
-  },
+  { id: 0, name: 'FIFO Blaster', short: 'FIFO', col: C.blue, dmg: 15, cd: 300, burst: 1, spread: 0,
+    theory: 'First In, First Out (FCFS) atiende procesos en estricto orden de llegada. No-apropiativo.',
+    pros: ['Implementación trivial', 'Sin inanición', 'Determinístico'],
+    cons: ['Efecto convoy', 'Tiempo de espera alto', 'No considera prioridades'],
+    analogy: 'FIFO Blaster dispara proyectiles lineales de uno en uno.' },
+  { id: 1, name: 'Quantum Burst', short: 'RR', col: C.cyan, dmg: 10, cd: 160, burst: 3, spread: 9,
+    theory: 'Round Robin asigna a cada proceso un quantum fijo.',
+    pros: ['Equitativo', 'Respuesta rápida', 'Preventivo'],
+    cons: ['Overhead de context switch', 'Throughput inferior'],
+    analogy: 'Quantum Burst lanza 3 proyectiles cíclicos.' },
+  { id: 2, name: 'Priority Sniper', short: 'PRIORITY', col: C.orange, dmg: 28, cd: 580, burst: 1, spread: 0,
+    theory: 'Planificación por Prioridad despacha el proceso de mayor prioridad.',
+    pros: ['Despacha hilos críticos', 'Flexible', 'Óptimo para tiempo real'],
+    cons: ['Inanición', 'Inversión de prioridad', 'Complejidad'],
+    analogy: 'Priority Sniper auto-apunta al enemigo más cercano.' },
+  { id: 3, name: 'Quick Terminator', short: 'SJF', col: C.green, dmg: 20, cd: 400, burst: 1, spread: 0,
+    theory: 'Shortest Job First selecciona el proceso con menor burst time.',
+    pros: ['Mínimo tiempo de espera', 'Alto throughput', 'Ideal para lotes'],
+    cons: ['Requiere estimación', 'Starvation de procesos largos'],
+    analogy: 'Daño crítico a enemigos con <30% HP.' },
+  { id: 4, name: 'Multishot Array', short: 'MLFQ', col: C.purple, dmg: 12, cd: 480, burst: 3, spread: 26,
+    theory: 'Multilevel Feedback Queue mantiene varias colas con distintos quantums.',
+    pros: ['Adaptativo', 'Balance entre respuesta y throughput'],
+    cons: ['Implementación compleja', 'Overhead'],
+    analogy: 'Dispara 3 proyectiles en abanico.' },
 ];
 
-/** Definición de tipos de procesos enemigos */
 const ETYPES = {
   ZOMBIE: { hp: 30, spd: 0.75, col: C.gray, r: 13, score: 50, sides: 5, cpuD: 0.011, ramD: 0.004, ioD: 0.007 },
   ORPHAN: { hp: 22, spd: 1.35, col: C.orange, r: 11, score: 70, sides: 4, cpuD: 0.014, ramD: 0.014, ioD: 0.005 },
@@ -74,73 +61,50 @@ const ETYPES = {
   RACECOND: { hp: 40, spd: 0.95, col: C.yellow, r: 12, score: 120, sides: 3, cpuD: 0.017, ramD: 0.011, ioD: 0.014 },
 };
 
-/** Power-ups / Primitivas de sincronización */
 const PUPS = {
   MUTEX: { name: 'Mutex Lock', col: '#ffd700', dur: 5000, icon: '🔒' },
   SEMAPHORE: { name: 'Semaphore Signal', col: C.cyan, dur: 3000, icon: '🚦' },
   IRQ: { name: 'Interrupt Request', col: C.orange, dur: 4000, icon: '⚡' },
 };
 
-/** Banco de 10 preguntas de SO1 */
 const QUESTIONS = [
-  {
-    q: '¿Cuál es el principal problema del algoritmo FIFO en planificación de procesos?',
-    opts: ['Genera demasiados cambios de contexto', 'El efecto convoy: procesos cortos esperan a largos', 'No puede manejar prioridades', 'Requiere conocer el burst time'],
-    ok: 1, fb: 'El efecto convoy ocurre cuando un proceso largo bloquea la CPU, haciendo esperar a procesos cortos. Incrementa drásticamente el tiempo de espera promedio. (Caballero Vargas, 2026)'
-  },
-  {
-    q: '¿Qué mecanismo garantiza la equidad entre procesos en Round Robin?',
-    opts: ['Prioridades dinámicas basadas en historial', 'Un quantum de tiempo fijo asignado por turno', 'La estimación del burst time más corto', 'Múltiples colas con diferentes prioridades'],
-    ok: 1, fb: 'Round Robin asigna a cada proceso un quantum fijo. Al expirar, el proceso va al final de la cola circular, garantizando que ningún proceso monopolice la CPU. (Caballero Vargas, 2026)'
-  },
-  {
-    q: '¿Qué es la "inversión de prioridad"?',
-    opts: ['Un proceso de baja prioridad retiene un recurso que necesita uno de alta prioridad', 'El planificador cambia prioridades arbitrariamente', 'MLFQ mueve todos los procesos a la cola más baja', 'Se detecta un deadlock en el sistema'],
-    ok: 0, fb: 'La inversión de prioridad ocurre cuando un proceso de baja prioridad posee un recurso bloqueando indirectamente a uno de alta prioridad. La solución es la herencia de prioridad. (Caballero Vargas, 2026)'
-  },
-  {
-    q: '¿Cuándo se produce una condición de carrera (Race Condition)?',
-    opts: ['Dos procesos acceden a un recurso compartido sin sincronización', 'Cuando un proceso ejecuta más rápido que otro', 'El planificador no puede decidir qué proceso ejecutar', 'Un proceso excede su quantum en Round Robin'],
-    ok: 0, fb: 'Una Race Condition ocurre cuando dos o más hilos acceden a recursos compartidos sin exclusión mutua y el resultado depende del orden no determinístico de ejecución. (Caballero Vargas, 2026)'
-  },
-  {
-    q: '¿Qué es un proceso Zombie en sistemas UNIX/Linux?',
-    opts: ['Proceso que consume 100% de CPU sin terminar', 'Proceso terminado cuya entrada persiste porque su padre no invocó wait()', 'Proceso que espera un recurso bloqueado', 'Proceso demonio en segundo plano sin terminal'],
-    ok: 1, fb: 'Un proceso Zombie completó su ejecución pero permanece en la tabla de procesos porque su padre no ejecutó wait() para recoger su código de salida. (Caballero Vargas, 2026)'
-  },
-  {
-    q: '¿Cuáles son las 4 condiciones de Coffman para que ocurra un Deadlock?',
-    opts: ['Exclusión mutua, retención y espera, no expropiación, espera circular', 'Inanición, inversión de prioridad, Race Condition, bloqueo activo', 'Fork, exec, wait, exit como primitivas', 'FIFO, RR, Priority, SJF como algoritmos concurrentes'],
-    ok: 0, fb: 'Las condiciones de Coffman: (1) Exclusión mutua, (2) Retención y espera, (3) No expropiación de recursos, (4) Espera circular entre procesos. (Caballero Vargas, 2026)'
-  },
-  {
-    q: '¿Qué es el "aging" en planificación por prioridad?',
-    opts: ['Reducir gradualmente la prioridad de procesos que llevan tiempo ejecutándose', 'Incrementar la prioridad de procesos que llevan tiempo esperando en cola', 'Terminar procesos que llevan demasiado tiempo bloqueados', 'Asignar prioridades basadas en el PID del proceso'],
-    ok: 1, fb: 'El aging incrementa la prioridad de un proceso mientras permanece en la cola de listos sin ejecutarse, previniendo la inanición (starvation). (Caballero Vargas, 2026)'
-  },
-  {
-    q: '¿Qué describe el término "thrashing" en gestión de memoria virtual?',
-    opts: ['Fragmentación excesiva del espacio de direcciones', 'El SO pasa más tiempo en swapping que ejecutando procesos útiles', 'Proceso de compactación de memoria física', 'Política de reemplazo de páginas LRU'],
-    ok: 1, fb: 'Thrashing: el grado de multiprogramación supera la memoria física disponible. Los procesos generan fallos de página continuos y la utilización de CPU colapsa. (Caballero Vargas, 2026)'
-  },
-  {
-    q: '¿Cuál es la diferencia fundamental entre un semáforo binario y un mutex?',
-    opts: ['No hay diferencia: son equivalentes', 'Un mutex tiene ownership: solo el hilo que lo adquirió puede liberarlo; un semáforo puede ser señalizado por cualquier hilo', 'Semáforos son solo entre procesos; mutex solo entre hilos', 'Mutex permite múltiples accesos; semáforos solo uno'],
-    ok: 1, fb: 'La diferencia clave es la propiedad (ownership). Un mutex solo puede ser liberado por el hilo que lo adquirió. Un semáforo binario puede ser V() por cualquier entidad. (Caballero Vargas, 2026)'
-  },
-  {
-    q: '¿Qué ocurre cuando un proceso Orphan es adoptado por init (PID 1)?',
-    opts: ['El proceso es terminado inmediatamente', 'Continúa ejecutándose con init como nuevo padre, que ejecutará wait() al terminar', 'Se convierte automáticamente en daemon', 'Pierde todos sus descriptores de archivo'],
-    ok: 1, fb: 'El proceso huérfano es adoptado por init (o systemd), que ejecutará wait() periódicamente para recoger su estado de salida, evitando que se convierta en zombie. (Caballero Vargas, 2026)'
-  },
+  { q: '¿Cuál es el principal problema del algoritmo FIFO?',
+    opts: ['Genera demasiados cambios de contexto', 'El efecto convoy', 'No puede manejar prioridades', 'Requiere conocer el burst time'],
+    ok: 1, fb: 'El efecto convoy ocurre cuando un proceso largo bloquea la CPU.' },
+  { q: '¿Qué mecanismo garantiza la equidad en Round Robin?',
+    opts: ['Prioridades dinámicas', 'Un quantum de tiempo fijo', 'Estimación del burst time', 'Múltiples colas'],
+    ok: 1, fb: 'Round Robin asigna a cada proceso un quantum fijo.' },
+  { q: '¿Qué es la "inversión de prioridad"?',
+    opts: ['Un proceso de baja prioridad retiene un recurso que necesita uno de alta', 'El planificador cambia prioridades', 'MLFQ mueve todos los procesos', 'Se detecta un deadlock'],
+    ok: 0, fb: 'Inversión de prioridad: proceso de baja prioridad bloquea a uno de alta.' },
+  { q: '¿Cuándo se produce una Race Condition?',
+    opts: ['Dos procesos acceden a un recurso compartido sin sincronización', 'Cuando un proceso ejecuta más rápido', 'El planificador no puede decidir', 'Un proceso excede su quantum'],
+    ok: 0, fb: 'Race Condition: acceso concurrente sin sincronización.' },
+  { q: '¿Qué es un proceso Zombie?',
+    opts: ['Proceso que consume 100% de CPU', 'Proceso terminado cuyo padre no invocó wait()', 'Proceso que espera un recurso', 'Proceso demonio'],
+    ok: 1, fb: 'Zombie: proceso terminado pero su padre no ejecutó wait().' },
+  { q: '¿Cuáles son las 4 condiciones de Coffman?',
+    opts: ['Exclusión mutua, retención y espera, no expropiación, espera circular', 'Inanición, inversión, Race Condition', 'Fork, exec, wait, exit', 'FIFO, RR, Priority, SJF'],
+    ok: 0, fb: 'Condiciones de Coffman: exclusión mutua, retención y espera, no expropiación, espera circular.' },
+  { q: '¿Qué es el "aging" en planificación por prioridad?',
+    opts: ['Reducir prioridad de procesos que llevan tiempo ejecutándose', 'Incrementar prioridad de procesos que llevan tiempo esperando', 'Terminar procesos bloqueados', 'Asignar prioridades por PID'],
+    ok: 1, fb: 'Aging: incrementa prioridad de procesos en espera para evitar inanición.' },
+  { q: '¿Qué describe el término "thrashing"?',
+    opts: ['Fragmentación del espacio de direcciones', 'El SO pasa más tiempo en swapping', 'Proceso de compactación de memoria', 'Política de reemplazo LRU'],
+    ok: 1, fb: 'Thrashing: el sistema pasa más tiempo en swapping que ejecutando.' },
+  { q: '¿Diferencia entre semáforo binario y mutex?',
+    opts: ['No hay diferencia', 'Mutex tiene ownership, semáforo puede ser señalizado por cualquier hilo', 'Semáforos solo entre procesos', 'Mutex permite múltiples accesos'],
+    ok: 1, fb: 'Mutex tiene ownership: solo el hilo que lo adquirió puede liberarlo.' },
+  { q: '¿Qué ocurre cuando un proceso Orphan es adoptado por init?',
+    opts: ['Es terminado inmediatamente', 'Continúa con init como padre', 'Se convierte en daemon', 'Pierde sus descriptores de archivo'],
+    ok: 1, fb: 'El proceso huérfano es adoptado por init.' },
 ];
 
 // ══════════════════════════════════════════════════════════════════════
-//  §1b  CONFIGURACIÓN DE BACKEND Y FIREBASE
+//  BACKEND Y FIREBASE
 // ══════════════════════════════════════════════════════════════════════
 const BACKEND_URL = 'https://kernel-defender-backend-production.up.railway.app';
 
-// 🔥 CONFIGURACIÓN DE FIREBASE - FRONTEND
 const firebaseConfig = {
     apiKey: "AIzaSyD-7XU3dEWcA_LwXXez4M-GMjYofLw-RJA",
     authDomain: "kernel-defender.firebaseapp.com",
@@ -150,7 +114,6 @@ const firebaseConfig = {
     appId: "1:808319934167:web:7a37cf75ea03dc46149a92"
 };
 
-// Inicializar Firebase (solo si firebase está disponible)
 let auth = null;
 let provider = null;
 try {
@@ -160,14 +123,14 @@ try {
         provider = new firebase.auth.GoogleAuthProvider();
         console.log('🔥 Firebase inicializado correctamente');
     } else {
-        console.warn('⚠️ Firebase SDK no cargado - verifica conexión a internet');
+        console.warn('⚠️ Firebase SDK no cargado');
     }
 } catch (error) {
     console.error('❌ Error inicializando Firebase:', error.message);
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §2  ESTADO GLOBAL
+//  ESTADO GLOBAL
 // ══════════════════════════════════════════════════════════════════════
 let G = {};
 
@@ -193,7 +156,7 @@ function newState(mode) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §3  REFERENCIAS DOM
+//  REFERENCIAS DOM
 // ══════════════════════════════════════════════════════════════════════
 const $ = id => document.getElementById(id);
 const gameCanvas = $('gameCanvas');
@@ -208,7 +171,7 @@ const overCanvas = $('overCanvas');
 const overCtx = overCanvas ? overCanvas.getContext('2d') : null;
 
 // ══════════════════════════════════════════════════════════════════════
-//  §4  LOCALSTORAGE — dashboard de partidas
+//  LOCALSTORAGE
 // ══════════════════════════════════════════════════════════════════════
 function loadSt() {
   try { return JSON.parse(localStorage.getItem('kd2') || '{}'); } catch { return {}; }
@@ -230,27 +193,8 @@ function renderDash() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §4b  AUTENTICACIÓN CON FIREBASE
+//  AUTENTICACIÓN
 // ══════════════════════════════════════════════════════════════════════
-
-// Inicializar Firebase (solo si firebase está disponible)
-// Verificar que Firebase está inicializado
-function ensureFirebase() {
-  if (!auth) {
-    try {
-      if (typeof firebase !== 'undefined') {
-        firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        provider = new firebase.auth.GoogleAuthProvider();
-        console.log('🔥 Firebase inicializado');
-      }
-    } catch (e) {
-      console.warn('⚠️ Error inicializando Firebase:', e.message);
-    }
-  }
-}
-// Llamar para asegurar que está inicializado
-ensureFirebase();
 
 async function loginWithGoogle() {
     if (!auth) {
@@ -314,7 +258,6 @@ function updateAuthUI(isLoggedIn, user = null) {
     const dashBtn = document.getElementById('btn-dashboard');
 
     if (isLoggedIn && user) {
-        // Mostrar usuario
         if (googleBtn) googleBtn.style.display = 'none';
         if (logoutBtn) {
             logoutBtn.style.display = 'inline-block';
@@ -322,14 +265,12 @@ function updateAuthUI(isLoggedIn, user = null) {
         }
         if (userInfo) userInfo.textContent = `✅ Conectado como: ${user.username || user.email}`;
 
-        // ✅ Mostrar botón dashboard si es profesor
         const teacherEmails = ['profesor@email.com', 'docente@univ.bo', 'patricia@univ.bo'];
         const isTeacher = teacherEmails.includes(user.email);
         console.log('👨‍🏫 ¿Es profesor?', isTeacher, user.email);
         
         if (dashBtnWrap) {
             dashBtnWrap.style.display = isTeacher ? 'block' : 'none';
-            console.log('📊 Botón Dashboard:', isTeacher ? 'visible' : 'oculto');
         }
         if (dashBtn) {
             dashBtn.style.display = isTeacher ? 'inline-block' : 'none';
@@ -343,7 +284,8 @@ function updateAuthUI(isLoggedIn, user = null) {
     }
 }
 
-LOGIN CON EMAIL Y CONTRASEÑA
+// ══════════════════════════════════════════════════════════════════════
+//  LOGIN CON EMAIL
 // ══════════════════════════════════════════════════════════════════════
 
 async function loginWithEmail(email, password) {
@@ -369,8 +311,6 @@ async function loginWithEmail(email, password) {
             
             updateAuthUI(true, data.user);
             renderDash();
-            
-            // Recargar después de 1 segundo
             setTimeout(() => location.reload(), 1000);
             return { success: true, user: data.user };
         } else {
@@ -405,7 +345,6 @@ async function registerWithEmail(username, email, password) {
                 msg.textContent = '✅ Usuario registrado. ¡Ahora inicia sesión!';
                 msg.className = 'login-message success';
             }
-            // Limpiar campos
             document.getElementById('login-email').value = email;
             document.getElementById('login-password').value = '';
             return { success: true, user: data.user };
@@ -427,7 +366,7 @@ async function registerWithEmail(username, email, password) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §4c  GUARDAR PUNTUACIÓN EN LA NUBE
+//  GUARDAR PUNTUACIÓN
 // ══════════════════════════════════════════════════════════════════════
 
 async function saveScoreToCloud(score, wave, mode) {
@@ -463,7 +402,7 @@ async function saveScoreToCloud(score, wave, mode) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §5  NAVEGACIÓN DE PANTALLAS
+//  NAVEGACIÓN
 // ══════════════════════════════════════════════════════════════════════
 function show(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -472,7 +411,7 @@ function show(name) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §6  BOOT SEQUENCE ANIMADA
+//  BOOT SEQUENCE
 // ══════════════════════════════════════════════════════════════════════
 const BOOT_LINES = [
   '> KERNEL DEFENDER OS v2.0 — BOOT SEQUENCE',
@@ -544,7 +483,7 @@ function animBootLogo() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §7  FONDO DE MENÚ ANIMADO
+//  MENU ANIMADO
 // ══════════════════════════════════════════════════════════════════════
 const MENU_STARS = Array.from({ length: 120 }, () => ({
   x: Math.random() * 800, y: Math.random() * 600,
@@ -571,7 +510,7 @@ function animMenu() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §8  INICIO DE PARTIDA
+//  INICIO DE PARTIDA
 // ══════════════════════════════════════════════════════════════════════
 function startGame(mode) {
   if (G.rafId) cancelAnimationFrame(G.rafId);
@@ -588,7 +527,7 @@ function startGame(mode) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §9  GAME LOOP PRINCIPAL
+//  GAME LOOP
 // ══════════════════════════════════════════════════════════════════════
 function loop(ts) {
   const dt = Math.min(ts - G.lastT, 48);
@@ -599,7 +538,7 @@ function loop(ts) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §10  UPDATE
+//  UPDATE
 // ══════════════════════════════════════════════════════════════════════
 function update(dt) {
   G.elapsed += dt;
@@ -659,12 +598,12 @@ function tickAI(dt) {
   for (const e of E) cnt[e.type] = (cnt[e.type] || 0) + 1;
 
   let chosen = G.aw, reason = '';
-  if (cnt['FORKBOMB']) { chosen = 3; reason = 'SJF → Fork Bomb detectada. Eliminar antes de replicación.'; }
-  else if (cnt['RACECOND']) { chosen = 4; reason = 'MLFQ → Race Condition. Cobertura multi-sector.'; }
-  else if (cnt['PAGEFAULT']) { chosen = 2; reason = 'Priority → Page Fault evasivo. Auto-apuntado activado.'; }
-  else if (E.length >= 5) { chosen = 1; reason = `Round Robin → Enjambre ${E.length} procesos. Distribución equitativa.`; }
-  else if (cnt['ZOMBIE'] && Object.keys(cnt).length === 1) { chosen = 0; reason = 'FIFO → Cola de Zombies. Despacho en orden de llegada.'; }
-  else { chosen = 2; reason = 'Priority → Procesos mixtos. Despachando por amenaza.'; }
+  if (cnt['FORKBOMB']) { chosen = 3; reason = 'SJF → Fork Bomb detectada.'; }
+  else if (cnt['RACECOND']) { chosen = 4; reason = 'MLFQ → Race Condition.'; }
+  else if (cnt['PAGEFAULT']) { chosen = 2; reason = 'Priority → Page Fault.'; }
+  else if (E.length >= 5) { chosen = 1; reason = `Round Robin → Enjambre ${E.length}.`; }
+  else if (cnt['ZOMBIE'] && Object.keys(cnt).length === 1) { chosen = 0; reason = 'FIFO → Cola de Zombies.'; }
+  else { chosen = 2; reason = 'Priority → Procesos mixtos.'; }
 
   if (chosen !== G.aw) selectWeapon(chosen, true);
   G.aiLog = reason; $('ai-log-txt').textContent = reason;
@@ -683,6 +622,9 @@ function closestEnemy() {
   return b;
 }
 
+// ══════════════════════════════════════════════════════════════════════
+//  ENEMIGOS
+// ══════════════════════════════════════════════════════════════════════
 function tickEnemies(dt) {
   const freeze = G.semaOn;
   const spd = freeze ? 0 : 1;
@@ -746,6 +688,9 @@ function tickEnemies(dt) {
   G.enemies = G.enemies.filter(e => !e.dead);
 }
 
+// ══════════════════════════════════════════════════════════════════════
+//  PROYECTILES
+// ══════════════════════════════════════════════════════════════════════
 function tickProjs(dt) {
   for (const p of G.projs) {
     p.x += p.vx * (dt / 16); p.y += p.vy * (dt / 16); p.life -= dt;
@@ -773,6 +718,9 @@ function tickProjs(dt) {
   G.projs = G.projs.filter(p => !p.dead);
 }
 
+// ══════════════════════════════════════════════════════════════════════
+//  POWER-UPS
+// ══════════════════════════════════════════════════════════════════════
 function tickPups(dt) {
   for (const pu of G.pups) {
     pu.age += dt; pu.y += Math.sin(pu.age / 280) * 0.35;
@@ -877,7 +825,9 @@ function puff(x, y, col, n = 10) {
   }
 }
 
-// ── §10k BOSSES ──────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+//  BOSSES
+// ══════════════════════════════════════════════════════════════════════
 function spawnBoss() {
   G.bossActive = true;
   if (G.wave === 4) G.bossData = {
@@ -955,7 +905,6 @@ function tickKP(b, dt) {
 }
 function bossWin() { G.bossActive = false; G.bossData = null; G.score += 300; G.waveKills += G.waveTarget; addFT(CW / 2, CH / 2, '✓ BOSS ELIMINADO +300', C.green); }
 
-// ── §10l MATAR ENEMIGO ───────────────────────────────────────────────
 function killE(e) {
   e.dead = true; G.score += e.score; G.killed++; G.waveKills++;
   burst(e.x, e.y, e.col, 13); addFT(e.x, e.y - 24, `+${e.score}`, C.green);
@@ -967,7 +916,6 @@ function dropPup(x, y) {
   G.pups.push({ type: t, x, y: y - 10, r: 13, col: PUPS[t].col, age: 0, dead: false });
 }
 
-// ── §10m DRENADO DE RECURSOS ─────────────────────────────────────────
 function drainRes(dt) {
   for (const e of G.enemies) {
     const d = ETYPES[e.type]; if (!d) continue;
@@ -982,7 +930,6 @@ function drainRes(dt) {
   }
 }
 
-// ── §10n AVANCE DE OLEADA ────────────────────────────────────────────
 function checkWave() {
   if (G.bossActive) return;
   if (G.waveKills >= G.waveTarget && G.wave < 12) {
@@ -994,7 +941,6 @@ function checkWave() {
   if (G.wave === 12 && G.waveKills >= G.waveTarget) endGame(true);
 }
 
-// ── §10o GAME OVER ───────────────────────────────────────────────────
 function checkOver() {
   let r = null;
   if (G.shield <= 0) r = 'Escudo del Kernel destruido. Corrupción total del sistema.';
@@ -1006,7 +952,7 @@ function checkOver() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §11  DISPARAR
+//  DISPARAR
 // ══════════════════════════════════════════════════════════════════════
 function shoot() {
   const w = WEAPONS[G.aw];
@@ -1048,7 +994,7 @@ function bestTarget() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §12  SELECCIÓN DE ARMA + MODAL TEORÍA
+//  SELECCIÓN DE ARMA + MODAL
 // ══════════════════════════════════════════════════════════════════════
 function selectWeapon(i, silent = false) {
   G.aw = i;
@@ -1067,7 +1013,7 @@ function showTheory(i) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §13  MODO EXAMEN
+//  MODO EXAMEN
 // ══════════════════════════════════════════════════════════════════════
 let eqData = null, eAnswered = false, eTid = null;
 function showExam() {
@@ -1115,22 +1061,18 @@ function failExam() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §14  PAUSA / REANUDAR
+//  PAUSA
 // ══════════════════════════════════════════════════════════════════════
 function pauseGame() { G.paused = true; }
 function resumeGame() { G.paused = false; G.lastT = performance.now(); }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §15  FIN DE PARTIDA
+//  FIN DE PARTIDA
 // ══════════════════════════════════════════════════════════════════════
 function endGame(won, reason = '') {
   G.over = true; G.won = won;
   cancelAnimationFrame(G.rafId);
-
-  // Guardar en local
   saveSt();
-
-  // Guardar en la nube
   saveScoreToCloud(G.score, G.wave, G.mode);
 
   const m = Math.floor(G.elapsed / 60000), s = Math.floor((G.elapsed % 60000) / 1000);
@@ -1163,7 +1105,7 @@ function animOverCanvas(won) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §16  RENDER PRINCIPAL
+//  RENDER
 // ══════════════════════════════════════════════════════════════════════
 function render() {
   ctx.fillStyle = '#020609'; ctx.fillRect(0, 0, CW, CH);
@@ -1469,7 +1411,7 @@ function drawPupStatus() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §17  HUD UPDATE
+//  HUD
 // ══════════════════════════════════════════════════════════════════════
 function updateHUD() {
   setBar('cpu', G.cpu); setBar('ram', G.ram); setBar('io', G.io); setBar('shield', G.shield);
@@ -1487,7 +1429,7 @@ function setBar(n, v) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §18  HELPERS PARTÍCULAS
+//  HELPERS
 // ══════════════════════════════════════════════════════════════════════
 function burst(x, y, col, n = 10) {
   for (let i = 0; i < n; i++) {
@@ -1498,7 +1440,7 @@ function burst(x, y, col, n = 10) {
 function addFT(x, y, txt, col) { G.fTexts.push({ x, y, txt, col, alpha: 1, life: 1100 }); }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §19  INPUT: TECLADO
+//  INPUT
 // ══════════════════════════════════════════════════════════════════════
 const keys = {};
 document.addEventListener('keydown', e => {
@@ -1525,9 +1467,6 @@ document.addEventListener('keyup', e => {
   if (e.code === 'KeyD' || e.code === 'ArrowRight') G.aimR = false;
 });
 
-// ══════════════════════════════════════════════════════════════════════
-//  §20  INPUT: TÁCTIL
-// ══════════════════════════════════════════════════════════════════════
 function initTouch() {
   const mobL = $('mob-l'), mobR = $('mob-r'), mobF = $('mob-fire');
   if (!mobL) return;
@@ -1546,9 +1485,6 @@ function initTouch() {
   });
 }
 
-// ══════════════════════════════════════════════════════════════════════
-//  §21  RESPONSIVE CANVAS
-// ══════════════════════════════════════════════════════════════════════
 function resizeCanvas() {
   const wrap = $('canvas-wrap'); if (!wrap) return;
   const sc = Math.min(wrap.clientWidth / CW, wrap.clientHeight / CH, 1);
@@ -1559,7 +1495,7 @@ window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
 // ══════════════════════════════════════════════════════════════════════
-//  §22  BINDING DE BOTONES UI
+//  UI BINDING
 // ══════════════════════════════════════════════════════════════════════
 function initUI() {
   // Boot
@@ -1593,46 +1529,50 @@ function initUI() {
   if (dashBtn) {
     dashBtn.addEventListener('click', showDashboard);
   }
+  document.getElementById('dash-back')?.addEventListener('click', () => { show('menu'); });
+  document.getElementById('dash-refresh')?.addEventListener('click', loadDashboardData);
 
-  // Dashboard - Volver
-  document.getElementById('dash-back')?.addEventListener('click', () => {
-    show('menu');
+  // Login con Email
+  document.getElementById('btn-login-email')?.addEventListener('click', async () => {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      if (!email || !password) {
+          const msg = document.getElementById('login-message');
+          if (msg) {
+              msg.textContent = '⚠️ Completa todos los campos';
+              msg.className = 'login-message error';
+          }
+          return;
+      }
+      await loginWithEmail(email, password);
   });
 
-  // Dashboard - Refrescar
-  document.getElementById('dash-refresh')?.addEventListener('click', loadDashboardData);
+  // Registro con Email
+  document.getElementById('btn-register-email')?.addEventListener('click', async () => {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      if (!email || !password) {
+          const msg = document.getElementById('login-message');
+          if (msg) {
+              msg.textContent = '⚠️ Completa todos los campos';
+              msg.className = 'login-message error';
+          }
+          return;
+      }
+      const username = email.split('@')[0];
+      await registerWithEmail(username, email, password);
+  });
+
+  // Enter key para login
+  document.getElementById('login-password')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+          document.getElementById('btn-login-email').click();
+      }
+  });
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  §23  POLYFILLS & ARRANQUE
-// ══════════════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  G = newState('manual');
-
-  // Polyfill roundRect
-  if (!CanvasRenderingContext2D.prototype.roundRect) {
-    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-      this.beginPath();
-      this.moveTo(x + r, y); this.lineTo(x + w - r, y);
-      this.quadraticCurveTo(x + w, y, x + w, y + r); this.lineTo(x + w, y + h - r);
-      this.quadraticCurveTo(x + w, y + h, x + w - r, y + h); this.lineTo(x + r, y + h);
-      this.quadraticCurveTo(x, y + h, x, y + h - r); this.lineTo(x, y + r);
-      this.quadraticCurveTo(x, y, x + r, y); this.closePath();
-    };
-  }
-
-  initUI();
-  initTouch();
-  initAuthUI();
-  startBoot();
-
-  console.log('%cKERNEL DEFENDER v2\n%cCaballero Vargas, P.E. (2026) · SO1 · La Paz, Bolivia',
-    'color:#00ffd2;font-size:1.2rem;font-weight:bold;',
-    'color:#6a7f96;font-size:.8rem;');
-});
-
-// ══════════════════════════════════════════════════════════════════════
-//  §24  INICIALIZAR UI DE AUTENTICACIÓN
+//  INITIALIZATION
 // ══════════════════════════════════════════════════════════════════════
 function initAuthUI() {
     const googleBtn = document.getElementById('btn-google-login');
@@ -1640,7 +1580,6 @@ function initAuthUI() {
 
     console.log('🔄 Inicializando UI de autenticación...');
 
-    // Verificar si hay usuario en localStorage
     const user = getCurrentUser();
     const token = localStorage.getItem('authToken');
     
@@ -1657,7 +1596,6 @@ function initAuthUI() {
             const result = await loginWithGoogle();
             if (result.success) {
                 renderDash();
-                // ✅ Actualizar UI después del login
                 updateAuthUI(true, result.user);
             } else {
                 alert('❌ Error: ' + result.message);
@@ -1669,55 +1607,14 @@ function initAuthUI() {
         logoutBtn.addEventListener('click', () => {
             logoutUser();
             renderDash();
-            // ✅ Actualizar UI después del logout
             updateAuthUI(false);
         });
     }
 }
 
-// Login con Email
-document.getElementById('btn-login-email')?.addEventListener('click', async () => {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    if (!email || !password) {
-        const msg = document.getElementById('login-message');
-        if (msg) {
-            msg.textContent = '⚠️ Completa todos los campos';
-            msg.className = 'login-message error';
-        }
-        return;
-    }
-    await loginWithEmail(email, password);
-});
-
-// Registro con Email
-document.getElementById('btn-register-email')?.addEventListener('click', async () => {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    if (!email || !password) {
-        const msg = document.getElementById('login-message');
-        if (msg) {
-            msg.textContent = '⚠️ Completa todos los campos';
-            msg.className = 'login-message error';
-        }
-        return;
-    }
-    // Usar parte del email como username
-    const username = email.split('@')[0];
-    await registerWithEmail(username, email, password);
-});
-
-// Enter key para login
-document.getElementById('login-password')?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        document.getElementById('btn-login-email').click();
-    }
-});
-
 // ══════════════════════════════════════════════════════════════════════
-//  §25  DASHBOARD DOCENTE
+//  DASHBOARD DOCENTE
 // ══════════════════════════════════════════════════════════════════════
-
 function isTeacher() {
   const user = getCurrentUser();
   if (!user) return false;
@@ -1741,7 +1638,6 @@ async function loadDashboardData() {
   };
 
   try {
-    // 1. Estadísticas Generales
     const statsRes = await fetch(`${BACKEND_URL}/api/admin/stats`, { headers });
     const stats = await statsRes.json();
     if (stats.success) {
@@ -1753,35 +1649,30 @@ async function loadDashboardData() {
       document.getElementById('dash-avg-score').textContent = stats.data.avgScore;
     }
 
-    // 2. Actividad Reciente
     const activityRes = await fetch(`${BACKEND_URL}/api/admin/activity`, { headers });
     const activity = await activityRes.json();
     if (activity.success) {
       renderActivityTable(activity.data);
     }
 
-    // 3. Uso de Algoritmos
     const algoRes = await fetch(`${BACKEND_URL}/api/admin/algorithms`, { headers });
     const algo = await algoRes.json();
     if (algo.success) {
       renderAlgorithms(algo.data);
     }
 
-    // 4. Rendimiento en Exámenes
     const examRes = await fetch(`${BACKEND_URL}/api/admin/exam-performance`, { headers });
     const exam = await examRes.json();
     if (exam.success) {
       renderExamTable(exam.data);
     }
 
-    // 5. Actividad por Hora
     const hourlyRes = await fetch(`${BACKEND_URL}/api/admin/hourly-activity`, { headers });
     const hourly = await hourlyRes.json();
     if (hourly.success) {
       renderHourlyActivity(hourly.data);
     }
 
-    // 6. Bajo Rendimiento
     const lowRes = await fetch(`${BACKEND_URL}/api/admin/low-performance`, { headers });
     const low = await lowRes.json();
     if (low.success) {
@@ -1820,19 +1711,8 @@ function renderAlgorithms(data) {
   const total = data.reduce((sum, d) => sum + parseInt(d.times_used), 0);
   if (total === 0) return;
 
-  const algoMap = {
-    'manual': 'FIFO',
-    'auto': 'RR',
-    'exam': 'PRIORITY'
-  };
-
-  const colors = {
-    'FIFO': 'fifo',
-    'RR': 'rr',
-    'PRIORITY': 'priority',
-    'SJF': 'sjf',
-    'MLFQ': 'mlfq'
-  };
+  const algoMap = { 'manual': 'FIFO', 'auto': 'RR', 'exam': 'PRIORITY' };
+  const colors = { 'FIFO': 'fifo', 'RR': 'rr', 'PRIORITY': 'priority', 'SJF': 'sjf', 'MLFQ': 'mlfq' };
 
   data.forEach(item => {
     const name = algoMap[item.mode] || item.mode;
@@ -1920,3 +1800,30 @@ function formatDate(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
+
+// ══════════════════════════════════════════════════════════════════════
+//  START
+// ══════════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  G = newState('manual');
+
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+      this.beginPath();
+      this.moveTo(x + r, y); this.lineTo(x + w - r, y);
+      this.quadraticCurveTo(x + w, y, x + w, y + r); this.lineTo(x + w, y + h - r);
+      this.quadraticCurveTo(x + w, y + h, x + w - r, y + h); this.lineTo(x + r, y + h);
+      this.quadraticCurveTo(x, y + h, x, y + h - r); this.lineTo(x, y + r);
+      this.quadraticCurveTo(x, y, x + r, y); this.closePath();
+    };
+  }
+
+  initUI();
+  initTouch();
+  initAuthUI();
+  startBoot();
+
+  console.log('%cKERNEL DEFENDER v2\n%cCaballero Vargas, P.E. (2026) · SO1 · La Paz, Bolivia',
+    'color:#00ffd2;font-size:1.2rem;font-weight:bold;',
+    'color:#6a7f96;font-size:.8rem;');
+});
