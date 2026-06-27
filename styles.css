@@ -1353,3 +1353,336 @@ body::after {
 ::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.2);
 }
+
+/* ── FORMULARIO DE LOGIN ── */
+.login-form {
+    margin: 10px 0;
+    padding: 15px;
+    background: rgba(0, 10, 25, 0.5);
+    border: 1px solid var(--dim);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.login-input {
+    padding: 10px 14px;
+    background: rgba(0, 20, 40, 0.6);
+    border: 1px solid var(--dim);
+    border-radius: 6px;
+    color: var(--white);
+    font-family: var(--font);
+    font-size: 0.8rem;
+    outline: none;
+    transition: var(--t);
+}
+
+.login-input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0, 255, 210, 0.2);
+}
+
+.login-input::placeholder {
+    color: rgba(216, 238, 255, 0.3);
+}
+
+.login-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.login-buttons .btn-neon {
+    flex: 1;
+    padding: 10px;
+    font-size: 0.7rem;
+}
+
+.login-message {
+    margin-top: 8px;
+    font-size: 0.7rem;
+    text-align: center;
+    min-height: 20px;
+}
+
+.login-message.success {
+    color: var(--green);
+}
+
+.login-message.error {
+    color: var(--red);
+}
+
+/* Separador */
+.login-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(216, 238, 255, 0.2);
+    font-size: 0.6rem;
+    margin: 8px 0;
+}
+
+.login-divider::before,
+.login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--dim);
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE PARA MÓVILES
+═══════════════════════════════════════════════════════ */
+
+/* Pantallas pequeñas (móviles) */
+@media (max-width: 768px) {
+    /* Ajustar tamaño del canvas */
+    #gameCanvas {
+        width: 100% !important;
+        height: auto !important;
+    }
+    
+    #canvas-wrap {
+        height: 300px !important;
+    }
+    
+    /* HUD más compacto */
+    #hud-top {
+        flex-wrap: wrap;
+        padding: 4px 8px;
+        min-height: 40px;
+        gap: 2px;
+    }
+    
+    #hud-left, #hud-right {
+        flex: 1;
+        min-width: 60px;
+    }
+    
+    #hud-center {
+        flex: 0 0 auto;
+    }
+    
+    .res-row {
+        gap: 2px;
+    }
+    
+    .rl {
+        font-size: 0.4rem !important;
+        width: 24px !important;
+    }
+    
+    .bt {
+        height: 4px !important;
+        min-width: 40px !important;
+    }
+    
+    .rv {
+        font-size: 0.4rem !important;
+        width: 20px !important;
+    }
+    
+    #hud-score {
+        font-size: 0.65rem !important;
+    }
+    
+    #hud-score span {
+        font-size: 0.8rem !important;
+    }
+    
+    #hud-wave, #hud-mode {
+        font-size: 0.4rem !important;
+    }
+    
+    .hud-mini {
+        font-size: 0.4rem !important;
+    }
+    
+    #lives-icons {
+        font-size: 0.5rem !important;
+    }
+    
+    .tc {
+        font-size: 0.5rem !important;
+    }
+    
+    /* Armas más compactas */
+    #hud-bottom {
+        flex-wrap: wrap;
+        padding: 2px 4px;
+        min-height: 36px;
+        gap: 2px;
+    }
+    
+    #weapon-bar {
+        gap: 2px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .wslot {
+        padding: 2px 6px;
+        min-width: 32px;
+    }
+    
+    .wk {
+        font-size: 0.35rem !important;
+    }
+    
+    .wi {
+        font-size: 0.4rem !important;
+    }
+    
+    .wcd {
+        height: 1.5px !important;
+    }
+    
+    /* Botón pausa */
+    #btn-pause {
+        top: 44px;
+        right: 4px;
+        width: 22px;
+        height: 22px;
+        font-size: 0.5rem;
+    }
+    
+    /* Controles táctiles */
+    #mob-ctrl {
+        gap: 2px;
+    }
+    
+    .mbtn {
+        padding: 4px 10px;
+        font-size: 0.5rem;
+    }
+    
+    .mbtn.fire {
+        padding: 4px 16px;
+    }
+    
+    /* Dashboard */
+    .dash-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+    
+    .dash-summary-value {
+        font-size: 1.2rem;
+    }
+    
+    .dash-table {
+        font-size: 0.5rem;
+    }
+    
+    .dash-table th, .dash-table td {
+        padding: 3px 4px;
+    }
+    
+    .dash-header h1 {
+        font-size: 1.2rem;
+    }
+    
+    /* Menú */
+    .menu-title .title-kern {
+        font-size: 2rem !important;
+    }
+    
+    .menu-title .title-def {
+        font-size: 1.2rem !important;
+    }
+    
+    .mode-card {
+        width: 100px;
+        padding: 8px;
+    }
+    
+    .card-icon {
+        font-size: 1.2rem;
+    }
+    
+    .card-name {
+        font-size: 0.6rem;
+    }
+    
+    .card-desc {
+        font-size: 0.5rem;
+    }
+    
+    .menu-cards {
+        gap: 6px;
+    }
+    
+    .menu-keys {
+        font-size: 0.5rem;
+        gap: 4px;
+    }
+    
+    .btn-neon {
+        font-size: 0.6rem;
+        padding: 4px 10px;
+    }
+    
+    .menu-stats {
+        font-size: 0.5rem;
+    }
+    
+    /* Login form */
+    .login-form {
+        max-width: 100%;
+        padding: 10px;
+    }
+    
+    .login-input {
+        padding: 6px 10px;
+        font-size: 0.6rem;
+    }
+    
+    .login-buttons .btn-neon {
+        padding: 6px;
+        font-size: 0.6rem;
+    }
+}
+
+/* Pantallas muy pequeñas */
+@media (max-width: 480px) {
+    #canvas-wrap {
+        height: 220px !important;
+    }
+    
+    .dash-summary-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .mode-card {
+        width: 80px;
+        padding: 6px;
+    }
+    
+    .card-icon {
+        font-size: 1rem;
+    }
+    
+    .card-name {
+        font-size: 0.5rem;
+    }
+    
+    .card-desc {
+        display: none;
+    }
+    
+    .menu-title .title-kern {
+        font-size: 1.5rem !important;
+    }
+    
+    .menu-title .title-def {
+        font-size: 1rem !important;
+    }
+}

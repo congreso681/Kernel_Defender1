@@ -343,6 +343,89 @@ function updateAuthUI(isLoggedIn, user = null) {
     }
 }
 
+LOGIN CON EMAIL Y CONTRASEÑA
+// ══════════════════════════════════════════════════════════════════════
+
+async function loginWithEmail(email, password) {
+    const msg = document.getElementById('login-message');
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('✅ Login exitoso:', data.user);
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('username', data.user.username);
+            
+            if (msg) {
+                msg.textContent = '✅ Sesión iniciada correctamente';
+                msg.className = 'login-message success';
+            }
+            
+            updateAuthUI(true, data.user);
+            renderDash();
+            
+            // Recargar después de 1 segundo
+            setTimeout(() => location.reload(), 1000);
+            return { success: true, user: data.user };
+        } else {
+            if (msg) {
+                msg.textContent = '❌ ' + data.message;
+                msg.className = 'login-message error';
+            }
+            return { success: false, message: data.message };
+        }
+    } catch (error) {
+        console.error('❌ Error en login:', error);
+        if (msg) {
+            msg.textContent = '❌ Error de conexión al servidor';
+            msg.className = 'login-message error';
+        }
+        return { success: false, message: error.message };
+    }
+}
+
+async function registerWithEmail(username, email, password) {
+    const msg = document.getElementById('login-message');
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            if (msg) {
+                msg.textContent = '✅ Usuario registrado. ¡Ahora inicia sesión!';
+                msg.className = 'login-message success';
+            }
+            // Limpiar campos
+            document.getElementById('login-email').value = email;
+            document.getElementById('login-password').value = '';
+            return { success: true, user: data.user };
+        } else {
+            if (msg) {
+                msg.textContent = '❌ ' + data.message;
+                msg.className = 'login-message error';
+            }
+            return { success: false, message: data.message };
+        }
+    } catch (error) {
+        console.error('❌ Error en registro:', error);
+        if (msg) {
+            msg.textContent = '❌ Error de conexión al servidor';
+            msg.className = 'login-message error';
+        }
+        return { success: false, message: error.message };
+    }
+}
+
 // ══════════════════════════════════════════════════════════════════════
 //  §4c  GUARDAR PUNTUACIÓN EN LA NUBE
 // ══════════════════════════════════════════════════════════════════════
@@ -1591,6 +1674,45 @@ function initAuthUI() {
         });
     }
 }
+
+// Login con Email
+document.getElementById('btn-login-email')?.addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) {
+        const msg = document.getElementById('login-message');
+        if (msg) {
+            msg.textContent = '⚠️ Completa todos los campos';
+            msg.className = 'login-message error';
+        }
+        return;
+    }
+    await loginWithEmail(email, password);
+});
+
+// Registro con Email
+document.getElementById('btn-register-email')?.addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) {
+        const msg = document.getElementById('login-message');
+        if (msg) {
+            msg.textContent = '⚠️ Completa todos los campos';
+            msg.className = 'login-message error';
+        }
+        return;
+    }
+    // Usar parte del email como username
+    const username = email.split('@')[0];
+    await registerWithEmail(username, email, password);
+});
+
+// Enter key para login
+document.getElementById('login-password')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        document.getElementById('btn-login-email').click();
+    }
+});
 
 // ══════════════════════════════════════════════════════════════════════
 //  §25  DASHBOARD DOCENTE
