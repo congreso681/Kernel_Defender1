@@ -234,7 +234,7 @@ function renderDash() {
 // ══════════════════════════════════════════════════════════════════════
 
 // Inicializar Firebase (solo si firebase está disponible)
-let auth = null;
+
 let provider = null;
 try {
   if (typeof firebase !== 'undefined') {
