@@ -140,20 +140,31 @@ const QUESTIONS = [
 // ══════════════════════════════════════════════════════════════════════
 const BACKEND_URL = 'https://kernel-defender-backend-production.up.railway.app';
 
-// 🔥 CONFIGURACIÓN DE FIREBASE - Reemplaza con tus datos
+// 🔥 CONFIGURACIÓN DE FIREBASE - FRONTEND
 const firebaseConfig = {
-  apiKey: "AIzaSyD-7XU3dEWcA_LwXXez4M-GMjYofLw-RJA",
-  authDomain: "kernel-defender.firebaseapp.com",
-  projectId: "kernel-defender",
-  storageBucket: "kernel-defender.firebasestorage.app",
-  messagingSenderId: "808319934167",
-  appId: "1:808319934167:web:7a37cf75ea03dc46149a92"
+    apiKey: "AIzaSyD-7XU3dEWcA_LwXXez4M-GMjYofLw-RJA",
+    authDomain: "kernel-defender.firebaseapp.com",
+    projectId: "kernel-defender",
+    storageBucket: "kernel-defender.firebasestorage.app",
+    messagingSenderId: "808319934167",
+    appId: "1:808319934167:web:7a37cf75ea03dc46149a92"
 };
 
-// Inicializar Firebase (compat)
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const provider = new firebase.auth.GoogleAuthProvider();
+// Inicializar Firebase (solo si firebase está disponible)
+let auth = null;
+let provider = null;
+try {
+    if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        provider = new firebase.auth.GoogleAuthProvider();
+        console.log('🔥 Firebase inicializado correctamente');
+    } else {
+        console.warn('⚠️ Firebase SDK no cargado - verifica conexión a internet');
+    }
+} catch (error) {
+    console.error('❌ Error inicializando Firebase:', error.message);
+}
 
 // ══════════════════════════════════════════════════════════════════════
 //  §2  ESTADO GLOBAL
